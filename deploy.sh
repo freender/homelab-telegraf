@@ -14,6 +14,7 @@ MAIN_CONFIG="${SCRIPT_DIR}/telegraf.conf"
 SENSORS_CONFIG="${SCRIPT_DIR}/sensors.conf"
 SMARTCTL_CONFIG="${SCRIPT_DIR}/smartctl.conf"
 DISKIO_CONFIG="${SCRIPT_DIR}/diskio.conf"
+NET_CONFIG="${SCRIPT_DIR}/net.conf"
 
 if [[ ! -f "$MAIN_CONFIG" ]]; then
     echo "Error: telegraf.conf not found at $MAIN_CONFIG"
@@ -72,6 +73,13 @@ for host in $HOSTS; do
     fi
 
     # Deploy diskio configuration
+
+    # Deploy net configuration
+    if [[ -f "$NET_CONFIG" ]]; then
+        echo "    Deploying net.conf..."
+        scp "$NET_CONFIG" "${host}:/etc/telegraf/telegraf.d/net.conf"
+        ssh "$host" "chown root:root /etc/telegraf/telegraf.d/net.conf && chmod 644 /etc/telegraf/telegraf.d/net.conf"
+    fi
     if [[ -f "$DISKIO_CONFIG" ]]; then
         echo "    Deploying diskio.conf..."
         scp "$DISKIO_CONFIG" "${host}:/etc/telegraf/telegraf.d/diskio.conf"
