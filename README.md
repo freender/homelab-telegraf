@@ -16,9 +16,15 @@ Minimal Telegraf configuration for collecting CPU package temperature from Proxm
 - NVMe drive temperatures
 - Other thermal sensors
 - Memory metrics (total, available, used, free, cached, buffered, used_percent)
+- SMART disk metrics (temperature, health)
+- Disk I/O metrics
+- Network interface metrics
 - **Collection interval:** 10 seconds
 - Sends to VictoriaMetrics at `victoria-metrics.pw.internal:8428`
 - Database: `telegraf`
+
+### Bray-Specific Configuration
+Bray has a Samsung 860 EVO M.2 boot drive connected via USB bridge that misreports its device type. A custom Python script collects temperature data directly using `smartctl -d sat` and outputs it in InfluxDB line protocol format.
 
 ## Configuration Files
 
@@ -32,6 +38,12 @@ Minimal Telegraf configuration for collecting CPU package temperature from Proxm
 - `telegraf.conf` - Main Telegraf configuration template
 - `sensors.conf` - Sensors input plugin configuration
 - `mem.conf` - Memory metrics input plugin configuration
+- `smartctl.conf` - SMART monitoring input plugin configuration
+- `smartctl-bray.conf` - Bray boot disk exec configuration
+- `smartctl-bray-boot.py` - Bray boot disk temperature script
+- `smartctl-bray-smartctl.conf` - Bray smartctl override (excludes boot disk)
+- `diskio.conf` - Disk I/O monitoring configuration
+- `net.conf` - Network interface monitoring configuration
 - `deploy.sh` - Deployment script
 - `query-temps.sh` - Quick temperature query helper
 
