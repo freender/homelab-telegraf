@@ -29,15 +29,21 @@ echo ""
 for host in $HOSTS; do
     echo "==> Deploying to $host..."
 
-    # Add InfluxData repository if not present
+    # Ensure InfluxData repository is configured and key is current
     if ! ssh "$host" "test -f /etc/apt/sources.list.d/influxdata.list"; then
         echo "    Adding InfluxData repository..."
-        ssh "$host" "curl -fsSL https://repos.influxdata.com/influxdata-archive_compat.key | gpg --dearmor -o /etc/apt/keyrings/influxdata-archive.gpg"
+        ssh "$host" "mkdir -p /etc/apt/keyrings"
+        ssh "$host" "curl -fsSL https://repos.influxdata.com/influxdata-archive.key | gpg --dearmor --yes --batch -o /etc/apt/keyrings/influxdata-archive.gpg"
         ssh "$host" "echo 'deb [signed-by=/etc/apt/keyrings/influxdata-archive.gpg] https://repos.influxdata.com/debian stable main' | tee /etc/apt/sources.list.d/influxdata.list"
-        ssh "$host" "apt-get update -qq"
     else
         echo "    InfluxData repository already configured"
     fi
+
+    echo "    Refreshing InfluxData repository key..."
+    ssh "$host" "mkdir -p /etc/apt/keyrings"
+    ssh "$host" "curl -fsSL https://repos.influxdata.com/influxdata-archive.key | gpg --dearmor --yes --batch -o /etc/apt/keyrings/influxdata-archive.gpg"
+    echo "    Testing apt update after key refresh..."
+    ssh "$host" "apt-get update -qq"
 
     # Install required packages
     echo "    Installing packages (telegraf, lm-sensors, smartmontools)..."
