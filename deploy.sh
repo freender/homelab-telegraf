@@ -15,6 +15,10 @@ SENSORS_CONFIG="${SCRIPT_DIR}/sensors.conf"
 SMARTCTL_CONFIG="${SCRIPT_DIR}/smartctl.conf"
 DISKIO_CONFIG="${SCRIPT_DIR}/diskio.conf"
 NET_CONFIG="${SCRIPT_DIR}/net.conf"
+MEM_CONFIG="${SCRIPT_DIR}/mem.conf"
+BRAY_SMARTCTL_CONFIG="${SCRIPT_DIR}/smartctl-bray.conf"
+BRAY_SMARTCTL_SCRIPT="${SCRIPT_DIR}/smartctl-bray-boot.py"
+BRAY_SMARTCTL_INPUT_CONFIG="${SCRIPT_DIR}/smartctl-bray-smartctl.conf"
 
 if [[ ! -f "$MAIN_CONFIG" ]]; then
     echo "Error: telegraf.conf not found at $MAIN_CONFIG"
@@ -67,18 +71,41 @@ for host in $HOSTS; do
     ssh "$host" "chown root:root /etc/telegraf/telegraf.d/sensors.conf && chmod 644 /etc/telegraf/telegraf.d/sensors.conf"
 
     # Deploy smartctl configuration (inputs.smartctl)
-    if [[ -f "$SMARTCTL_CONFIG" ]]; then
+    if [[ "$host" == "bray" && -f "$BRAY_SMARTCTL_INPUT_CONFIG" ]]; then
+        echo "    Deploying bray smartctl.conf override..."
+        scp "$BRAY_SMARTCTL_INPUT_CONFIG" "${host}:/etc/telegraf/telegraf.d/smartctl.conf"
+        ssh "$host" "chown root:root /etc/telegraf/telegraf.d/smartctl.conf && chmod 644 /etc/telegraf/telegraf.d/smartctl.conf"
+    elif [[ -f "$SMARTCTL_CONFIG" ]]; then
         echo "    Deploying smartctl.conf..."
         scp "$SMARTCTL_CONFIG" "${host}:/etc/telegraf/telegraf.d/smartctl.conf"
         ssh "$host" "chown root:root /etc/telegraf/telegraf.d/smartctl.conf && chmod 644 /etc/telegraf/telegraf.d/smartctl.conf"
+    fi
 
-        # Deploy sudoers rule for smartctl
+    # Deploy sudoers rule for smartctl
+    if [[ -f "${SCRIPT_DIR}/telegraf-smartctl-sudoers" ]]; then
         echo "    Deploying sudoers rule for smartctl..."
         scp "${SCRIPT_DIR}/telegraf-smartctl-sudoers" "${host}:/etc/sudoers.d/telegraf-smartctl"
         ssh "$host" "chown root:root /etc/sudoers.d/telegraf-smartctl && chmod 440 /etc/sudoers.d/telegraf-smartctl"
     fi
 
+    # Deploy bray boot smartctl exec config
+    if [[ "$host" == "bray" && -f "$BRAY_SMARTCTL_CONFIG" && -f "$BRAY_SMARTCTL_SCRIPT" ]]; then
+        echo "    Deploying bray boot smartctl exec config..."
+        scp "$BRAY_SMARTCTL_CONFIG" "${host}:/etc/telegraf/telegraf.d/smartctl-bray.conf"
+        ssh "$host" "chown root:root /etc/telegraf/telegraf.d/smartctl-bray.conf && chmod 644 /etc/telegraf/telegraf.d/smartctl-bray.conf"
+
+        echo "    Deploying bray boot smartctl exec script..."
+        ssh "$host" "mkdir -p /usr/local/bin"
+        scp "$BRAY_SMARTCTL_SCRIPT" "${host}:/usr/local/bin/telegraf-smartctl-bray-boot"
+        ssh "$host" "chown root:root /usr/local/bin/telegraf-smartctl-bray-boot && chmod 755 /usr/local/bin/telegraf-smartctl-bray-boot"
+    fi
+
     # Deploy diskio configuration
+    if [[ -f "$DISKIO_CONFIG" ]]; then
+        echo "    Deploying diskio.conf..."
+        scp "$DISKIO_CONFIG" "${host}:/etc/telegraf/telegraf.d/diskio.conf"
+        ssh "$host" "chown root:root /etc/telegraf/telegraf.d/diskio.conf && chmod 644 /etc/telegraf/telegraf.d/diskio.conf"
+    fi
 
     # Deploy net configuration
     if [[ -f "$NET_CONFIG" ]]; then
@@ -86,10 +113,12 @@ for host in $HOSTS; do
         scp "$NET_CONFIG" "${host}:/etc/telegraf/telegraf.d/net.conf"
         ssh "$host" "chown root:root /etc/telegraf/telegraf.d/net.conf && chmod 644 /etc/telegraf/telegraf.d/net.conf"
     fi
-    if [[ -f "$DISKIO_CONFIG" ]]; then
-        echo "    Deploying diskio.conf..."
-        scp "$DISKIO_CONFIG" "${host}:/etc/telegraf/telegraf.d/diskio.conf"
-        ssh "$host" "chown root:root /etc/telegraf/telegraf.d/diskio.conf && chmod 644 /etc/telegraf/telegraf.d/diskio.conf"
+
+    # Deploy mem configuration
+    if [[ -f "$MEM_CONFIG" ]]; then
+        echo "    Deploying mem.conf..."
+        scp "$MEM_CONFIG" "${host}:/etc/telegraf/telegraf.d/mem.conf"
+        ssh "$host" "chown root:root /etc/telegraf/telegraf.d/mem.conf && chmod 644 /etc/telegraf/telegraf.d/mem.conf"
     fi
 
     # Remove any old processor normalizers

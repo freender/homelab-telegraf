@@ -15,6 +15,7 @@ Minimal Telegraf configuration for collecting CPU package temperature from Proxm
 - Individual core temperatures
 - NVMe drive temperatures
 - Other thermal sensors
+- Memory metrics (total, available, used, free, cached, buffered, used_percent)
 - **Collection interval:** 10 seconds
 - Sends to VictoriaMetrics at `victoria-metrics.pw.internal:8428`
 - Database: `telegraf`
@@ -24,11 +25,13 @@ Minimal Telegraf configuration for collecting CPU package temperature from Proxm
 **On cluster hosts:**
 - `/etc/telegraf/telegraf.conf` - Main configuration (10s interval, output to VictoriaMetrics)
 - `/etc/telegraf/telegraf.d/sensors.conf` - CPU temperature input plugin
+- `/etc/telegraf/telegraf.d/mem.conf` - Memory metrics input plugin
 - `/etc/telegraf/telegraf.d/apcupsd.conf` - UPS monitoring (existing, preserved)
 
 **In this repo:**
 - `telegraf.conf` - Main Telegraf configuration template
 - `sensors.conf` - Sensors input plugin configuration
+- `mem.conf` - Memory metrics input plugin configuration
 - `deploy.sh` - Deployment script
 - `query-temps.sh` - Quick temperature query helper
 
@@ -50,8 +53,9 @@ Deploy to specific hosts:
 2. Configures `lm-sensors` (auto-detect)
 3. Deploys main config to `/etc/telegraf/telegraf.conf`
 4. Deploys sensors config to `/etc/telegraf/telegraf.d/sensors.conf`
-5. Preserves existing configs in `telegraf.d/` (e.g., apcupsd.conf)
-6. Enables and restarts telegraf service
+5. Deploys memory config to `/etc/telegraf/telegraf.d/mem.conf`
+6. Preserves existing configs in `telegraf.d/` (e.g., apcupsd.conf)
+7. Enables and restarts telegraf service
 
 ## Quick Query
 
@@ -123,6 +127,21 @@ sensors_temp_input{chip="coretemp-isa-0000",feature=~"core_.*"}
 **NVMe Temperatures:**
 ```promql
 sensors_temp_input{chip=~"nvme-.*",feature="composite"}
+```
+
+**Memory Used Percent:**
+```promql
+mem_used_percent
+```
+
+**Memory Available (GB):**
+```promql
+mem_available / 1024 / 1024 / 1024
+```
+
+**Memory Used (GB):**
+```promql
+mem_used / 1024 / 1024 / 1024
 ```
 EOFREADME'
 ## Prerequisites
