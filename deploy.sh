@@ -19,6 +19,7 @@ MEM_CONFIG="${SCRIPT_DIR}/mem.conf"
 BRAY_SMARTCTL_CONFIG="${SCRIPT_DIR}/smartctl-bray.conf"
 BRAY_SMARTCTL_SCRIPT="${SCRIPT_DIR}/smartctl-bray-boot.py"
 BRAY_SMARTCTL_INPUT_CONFIG="${SCRIPT_DIR}/smartctl-bray-smartctl.conf"
+APCUPSD_CONFIG="${SCRIPT_DIR}/apcupsd.conf"
 
 if [[ ! -f "$MAIN_CONFIG" ]]; then
     echo "Error: telegraf.conf not found at $MAIN_CONFIG"
@@ -121,6 +122,13 @@ for host in $HOSTS; do
         ssh "$host" "chown root:root /etc/telegraf/telegraf.d/mem.conf && chmod 644 /etc/telegraf/telegraf.d/mem.conf"
     fi
 
+
+    # Deploy apcupsd configuration (only to hosts with UPS)
+    if [[ "$host" == "bray" || "$host" == "xur" ]] && [[ -f "$APCUPSD_CONFIG" ]]; then
+        echo "    Deploying apcupsd.conf..."
+        scp "$APCUPSD_CONFIG" "${host}:/etc/telegraf/telegraf.d/apcupsd.conf"
+        ssh "$host" "chown root:root /etc/telegraf/telegraf.d/apcupsd.conf && chmod 644 /etc/telegraf/telegraf.d/apcupsd.conf"
+    fi
     # Remove any old processor normalizers
     ssh "$host" "rm -f /etc/telegraf/telegraf.d/processors-smartctl.conf"
 
