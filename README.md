@@ -45,7 +45,6 @@ Bray has a Samsung 860 EVO M.2 boot drive connected via USB bridge that misrepor
 - `diskio.conf` - Disk I/O monitoring configuration
 - `net.conf` - Network interface monitoring configuration
 - `deploy.sh` - Deployment script
-- `query-temps.sh` - Quick temperature query helper
 
 ## Deployment
 
@@ -68,23 +67,6 @@ Deploy to specific hosts:
 5. Deploys memory config to `/etc/telegraf/telegraf.d/mem.conf`
 6. Preserves existing configs in `telegraf.d/` (e.g., apcupsd.conf)
 7. Enables and restarts telegraf service
-
-## Quick Query
-
-Check current CPU package temperatures:
-```bash
-./query-temps.sh
-```
-
-Output:
-```
-==> CPU Package Temperatures
-
-ace: 42°C
-bray: 39°C
-clovis: 53°C
-xur: 40°C
-```
 
 ## Verification
 
@@ -155,7 +137,7 @@ mem_available / 1024 / 1024 / 1024
 ```promql
 mem_used / 1024 / 1024 / 1024
 ```
-EOFREADME'
+
 ## Prerequisites
 
 The deployment script automatically configures the InfluxData repository if not present:
