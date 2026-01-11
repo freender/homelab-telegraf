@@ -129,8 +129,6 @@ for host in $HOSTS; do
         scp "$APCUPSD_CONFIG" "${host}:/etc/telegraf/telegraf.d/apcupsd.conf"
         ssh "$host" "chown root:root /etc/telegraf/telegraf.d/apcupsd.conf && chmod 644 /etc/telegraf/telegraf.d/apcupsd.conf"
     fi
-    # Remove any old processor normalizers
-    ssh "$host" "rm -f /etc/telegraf/telegraf.d/processors-smartctl.conf"
 
     # Enable and restart telegraf
     echo "    Enabling and restarting telegraf service..."
